@@ -134,7 +134,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
         6,
         kStateSolid
     );
-    terrainMaterial->AddElement(nist->FindOrBuildElement("O"), 0.651);
+    terrainMaterial->AddElement(nist->FindOrBuildElement("O"), 0.641);
     terrainMaterial->AddElement(nist->FindOrBuildElement("Si"), 0.25);
     terrainMaterial->AddElement(nist->FindOrBuildElement("Al"), 0.08);
     terrainMaterial->AddElement(nist->FindOrBuildElement("Ca"), 0.015);

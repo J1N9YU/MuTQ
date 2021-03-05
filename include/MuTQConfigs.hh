@@ -6,7 +6,15 @@
 
 //
 // Using time for random seed if enabled.
-#define MuTQ_USING_TIME_RANDOM_SEED                false
+#define MuTQ_USING_TIME_RANDOM_SEED       false
+
+//
+// Kill gamma if enabled.
+#define MuTQ_KILL_GAMMA                   true
+
+//
+// Kill electron if enabled.
+#define MuTQ_KILL_ELECTRON                true
 
 #endif
 
