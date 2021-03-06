@@ -43,8 +43,6 @@ set(SCRIPTS
   ./macros/init_vis.mac
   ./macros/run.mac
   ./macros/vis.mac
-  ./datafiles/cosmicMuonProperties.csv
-  ./datafiles/scintillatorProperties.csv
   ./datafiles/terrainPoints.csv
   ./datafiles/terrainMeshDef.csv
   ./datafiles/terrainBoundaryPoints.csv

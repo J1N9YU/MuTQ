@@ -52,7 +52,7 @@ static const G4String gTempName("_tmp");
 //
 // Analysis & file io
 
-static const G4String gRootFileName("MuGridAtTianQin");
+extern const char* gRootFileName;
 
 #endif
 

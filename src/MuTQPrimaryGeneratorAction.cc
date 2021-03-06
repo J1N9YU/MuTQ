@@ -4,6 +4,7 @@
 #include "g4analysis.hh"
 
 #include "MuTQPrimaryGeneratorAction.hh"
+#include "MuTQConfigs.hh"
 
 G4double MuTQPrimaryGeneratorAction::fSphereRadius = 0.0;
 G4ThreeVector MuTQPrimaryGeneratorAction::fMuGridPosition;
@@ -69,12 +70,42 @@ void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& 
     energy *= GeV;
 }
 
-G4double MuTQPrimaryGeneratorAction::EnergySpectrum(G4double E_GeV, G4double theta) const {
+// Note: E in GeV, theta in rad.
+//
+G4double MuTQPrimaryGeneratorAction::EnergySpectrum(G4double E, G4double theta) const {
+#if MuTQ_USING_REYNA && MuTQ_USING_TANG
+#error "More than 1 energy spectrm are enabled!"
+#elif MuTQ_USING_REYNA
     G4double cosTheta = cos(theta);
-    G4double y = log(E_GeV * cosTheta);
+    G4double y = log(E * cosTheta);
     G4double exponent = 0.0481903 - 0.00171198 * y;
     exponent = -0.559371 + exponent * y;
     exponent = -0.2455 + exponent * y;
-    return 0.973902 * cosTheta * cosTheta * cosTheta * pow(E_GeV * cosTheta, exponent);
+    return 0.973902 * cosTheta * cosTheta * cosTheta * pow(E * cosTheta, exponent);
+#elif MuTQ_USING_TANG
+    constexpr G4double p1 = 0.102573;
+    constexpr G4double p2 = -0.068287;
+    constexpr G4double p3 = 0.958633;
+    constexpr G4double p4 = 0.0407253;
+    constexpr G4double p5 = 0.817285;
+    constexpr G4double r = -2.7;
+    G4double x = cos(theta);
+    G4double xStar = sqrt((x * x + p1 * p1 + p2 * pow(x, p3) + p4 * pow(x, p5)) / (1.0 + p1 * p1 + p2 + p4));
+    G4double F = 0.0;
+    if (E > 100.0 / xStar) {
+        F = pow(E, r) * (1.0 / (1.0 + 1.1 / 115.0 * E * x) + 0.054 / (1.0 + 1.1 / 850.0 * E * x));
+    } else {
+        if (E < 1.0 / xStar) {
+            E = 0.3 * E + 0.7 / xStar;
+        }
+        constexpr G4double rc = 0.0001;
+        G4double Ecr = E + 0.00206 * (950.0 / xStar - 90.0);
+        G4double A = 1.1 * pow(90.0 / 1030.0 * sqrt(x + 0.001), 4.5 / (E * xStar));
+        F = A * pow(E, r) * (1.0 / (1.0 + 1.1 / 115.0 * Ecr * x) + 0.054 / (1.0 + 1.1 / 850.0 * Ecr * x) + rc);
+    }
+    return 4247.29821266489 * 0.14 * F;
+#else
+#error "No energy spectrm is enabled!"
+#endif
 }
 

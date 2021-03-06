@@ -13,18 +13,20 @@
 #include "MuTQPhysicsList.hh"
 #include "MuTQConfigs.hh"
 #include "MuTQProgressMonitor.hh"
+#include "MuTQGlobal.hh"
 
 #include <sstream>
 #include <ctime>
 
 G4bool gRunningInBatch;
 G4double gMuGridPosition[2];
+const char* gRootFileName;
 
 int main(int argc, char** argv) {
     // Detect interactive mode (if no arguments) and define UI session
     //
-    if (argc < 3) {
-        std::cout << "Usage: MuGridAtTianQin [MuGrid X (m)] [MuGrid Y (m)] ([macro file])" << std::endl;
+    if (argc < 3 || argc > 5) {
+        std::cout << "Usage: MuGridAtTianQin [MuGrid X (m)] [MuGrid Y (m)] ([macro file]) ([root file name])" << std::endl;
         return 1;
     }
 
@@ -32,6 +34,12 @@ int main(int argc, char** argv) {
     std::stringstream(argv[2]) >> gMuGridPosition[1];
     gMuGridPosition[0] *= m;
     gMuGridPosition[1] *= m;
+
+    if (argc == 5) {
+        gRootFileName = argv[4];
+    } else {
+        gRootFileName = "output";
+    }
 
     G4UIExecutive* ui = nullptr;
     if (argc == 3) {
@@ -75,7 +83,7 @@ int main(int argc, char** argv) {
 
     // Get the pointer to the User Interface manager
     G4UImanager* UImanager = G4UImanager::GetUIpointer();
-    
+
     // Process macro or start UI session
     //
     UImanager->ApplyCommand("/control/macroPath macros");
