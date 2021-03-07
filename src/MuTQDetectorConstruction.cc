@@ -130,7 +130,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     //
     auto terrainMaterial = new G4Material(
         gTerrainMaterialName,
-        2.6 * g / cm3,
+        3.0 * g / cm3,
         6,
         kStateSolid
     );
