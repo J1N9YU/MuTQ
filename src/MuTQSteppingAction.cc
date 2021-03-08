@@ -11,9 +11,6 @@ MuTQSteppingAction::MuTQSteppingAction() :
 MuTQSteppingAction::~MuTQSteppingAction() {}
 
 void MuTQSteppingAction::UserSteppingAction(const G4Step* step) {
-    if (step->GetPreStepPoint()->GetPosition().z() < 0) {
-        step->GetTrack()->SetTrackStatus(fStopAndKill);
-    }
 #if MuTQ_KILL_GAMMA
     if (step->GetTrack()->GetParticleDefinition() == G4Gamma::Definition()) {
         step->GetTrack()->SetTrackStatus(fStopAndKill);

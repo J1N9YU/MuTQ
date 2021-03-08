@@ -7,6 +7,7 @@
 #include "MuTQDetectorConstruction.hh"
 #include "MuTQConfigs.hh"
 #include "MuTQProgressMonitor.hh"
+#include "MuTQExtern.hh"
 
 MuTQRunAction::MuTQRunAction() :
     G4UserRunAction(),

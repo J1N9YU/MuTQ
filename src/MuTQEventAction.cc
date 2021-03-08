@@ -1,5 +1,4 @@
 #include "MuTQEventAction.hh"
-#include "MuTQGlobal.hh"
 #include "MuTQProgressMonitor.hh"
 
 MuTQEventAction::MuTQEventAction() :

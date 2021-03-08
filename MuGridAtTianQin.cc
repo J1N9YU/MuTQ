@@ -13,13 +13,13 @@
 #include "MuTQPhysicsList.hh"
 #include "MuTQConfigs.hh"
 #include "MuTQProgressMonitor.hh"
-#include "MuTQGlobal.hh"
+#include "MuTQExtern.hh"
 
 #include <sstream>
 #include <ctime>
 
-G4bool gRunningInBatch;
-G4double gMuGridPosition[2];
+bool gRunningInBatch;
+double gMuGridPosition[2];
 const char* gRootFileName;
 
 int main(int argc, char** argv) {
@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
 
     std::stringstream(argv[1]) >> gMuGridPosition[0];
     std::stringstream(argv[2]) >> gMuGridPosition[1];
-    gMuGridPosition[0] *= m;
-    gMuGridPosition[1] *= m;
+    gMuGridPosition[0] *= CLHEP::m;
+    gMuGridPosition[1] *= CLHEP::m;
 
     if (argc == 5) {
         gRootFileName = argv[4];

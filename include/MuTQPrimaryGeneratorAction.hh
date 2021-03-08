@@ -6,20 +6,16 @@
 #include "globals.hh"
 
 #include "CreateMapFromCSV.hh"
-#include "MuTQGlobal.hh"
 
 class G4ParticleGun;
 class G4Event;
 
 constexpr G4double maxE_GeV = 10000;
-constexpr G4double effectiveRange = 0.25 * m;
+constexpr G4double effectiveRange = 0.3 * CLHEP::m;
 
 class MuTQPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
     G4ParticleGun* fParticleGun;
-public:
-    static G4double fSphereRadius;
-    static G4ThreeVector fMuGridPosition;
 
 public:
     MuTQPrimaryGeneratorAction();

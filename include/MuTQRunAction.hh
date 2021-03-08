@@ -5,7 +5,6 @@
 #include "G4Accumulable.hh"
 #include "globals.hh"
 #include "g4analysis.hh"
-#include "MuTQGlobal.hh"
 
 class MuTQRunAction : public G4UserRunAction {
 private:

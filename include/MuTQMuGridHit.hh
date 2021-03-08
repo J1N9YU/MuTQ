@@ -8,8 +8,6 @@
 #include "G4VPhysicalVolume.hh"
 #include "G4ParticleDefinition.hh"
 
-#include "MuTQGlobal.hh"
-
 class MuTQMuGridHit : public G4VHit {
 private:
     G4int                       fScintillatorID;

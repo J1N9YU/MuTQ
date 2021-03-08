@@ -2,7 +2,6 @@
 
 #include "G4SystemOfUnits.hh"
 #include "G4NistManager.hh"
-#include "G4PVPlacement.hh"
 #include "G4Box.hh"
 #include "G4TriangularFacet.hh"
 #include "G4QuadrangularFacet.hh"
@@ -10,13 +9,51 @@
 #include "G4Tubs.hh"
 #include "G4SDManager.hh"
 
-#include "MuTQGlobal.hh"
+#include "MuTQExtern.hh"
 #include "MuTQConfigs.hh"
 #include "CreateMapFromCSV.hh"
 #include "MuTQMuGridSD.hh"
 #include "MuTQPrimaryGeneratorAction.hh"
 
 #include <algorithm>
+
+// World
+
+const G4String MuTQDetectorConstruction::fWorldName = "world";
+const G4String MuTQDetectorConstruction::fWorldMaterialName = "void";
+
+// Terrian
+
+const G4String MuTQDetectorConstruction::fTerrainName = "terrian";
+const G4String MuTQDetectorConstruction::fTerrainMaterialName = "granite";
+G4TessellatedSolid* MuTQDetectorConstruction::fSolidTerrain = nullptr;
+G4double MuTQDetectorConstruction::fTerrainMaxX = 0.0;
+G4double MuTQDetectorConstruction::fTerrainMinX = 0.0;
+G4double MuTQDetectorConstruction::fTerrainMaxY = 0.0;
+G4double MuTQDetectorConstruction::fTerrainMinY = 0.0;
+G4double MuTQDetectorConstruction::fTerrainMaxZ = 0.0;
+
+// Tunnel
+
+const G4String MuTQDetectorConstruction::fTunnelName = "tunnel";
+const G4double MuTQDetectorConstruction::fTunnelRadius = 8.0 * m;
+const G4double MuTQDetectorConstruction::fTunnelSliceAngle = 204 * deg;
+const G4double MuTQDetectorConstruction::fTunnelGrad = 0.003;
+const G4double MuTQDetectorConstruction::fTunnelSlopeAngle = atan(fTunnelGrad);
+const G4double MuTQDetectorConstruction::fTunnelEntranceX = 55 * m;
+const G4double MuTQDetectorConstruction::fTunnelEntranceAltitude = 10.982 * m;
+const G4double MuTQDetectorConstruction::fTunnelLength = 529.389 * m - fTunnelEntranceX;
+G4ThreeVector MuTQDetectorConstruction::fMuGridPosition = G4ThreeVector();
+
+// MuGrid
+
+const G4String MuTQDetectorConstruction::fMuGridName = "MuGrid";
+const G4double MuTQDetectorConstruction::fMuGridHeight = 50 * cm;
+const G4double MuTQDetectorConstruction::fMuGridHalfSize[3] = { 25 * cm, 25 * cm, 25 * cm };
+
+// temp object
+
+const G4String MuTQDetectorConstruction::fTempName = "_tmp";
 
 MuTQDetectorConstruction::MuTQDetectorConstruction() :
     fLogicalMuGrid(nullptr) {}
@@ -32,59 +69,65 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // Solid terrain
     // ============================================================================
 
-    auto solidTerrain = ConstructTerrain(
-        gTerrainPointFileName,
-        gTerrainMeshDefFileName,
-        gTerrainBoundaryFileName
-    );
+    if (!fSolidTerrain) {
+        fSolidTerrain = ConstructTerrain(
+            "datafiles/terrainPoints.csv",
+            "datafiles/terrainMeshDef.csv",
+            "datafiles/terrainBoundaryPoints.csv"
+        );
+        fTerrainMaxX = fSolidTerrain->GetMaxXExtent();
+        fTerrainMinX = fSolidTerrain->GetMinXExtent();
+        fTerrainMaxY = fSolidTerrain->GetMaxYExtent();
+        fTerrainMinY = fSolidTerrain->GetMinYExtent();
+        fTerrainMaxZ = fSolidTerrain->GetMaxZExtent();
+    }
 
     // ============================================================================
     // Solid tunnel
     // ============================================================================
 
-    G4double groundToCentre = gTunnelRadius * sin(gTunnelAngle * 0.5 - 90 * deg);
+    G4double groundToCentre = fTunnelRadius * sin(fTunnelSliceAngle * 0.5 - 90 * deg);
     auto solidTunnel = new G4SubtractionSolid(
-        gTunnelName,
+        fTunnelName,
         new G4Tubs(
-            gTempName,
+            fTempName,
             0.0,
-            gTunnelRadius,
-            gTunnelLength * 0.5,
+            fTunnelRadius,
+            fTunnelLength * 0.5,
             0.0,
             2 * M_PI
         ),
         new G4Box(
-            gTempName,
-            gTunnelRadius,
-            gTunnelRadius,
-            gTunnelLength
+            fTempName,
+            fTunnelRadius,
+            fTunnelRadius,
+            fTunnelLength
         ),
         nullptr,
-        G4ThreeVector(-gTunnelRadius - groundToCentre)
+        G4ThreeVector(-fTunnelRadius - groundToCentre)
     );
 
     // ============================================================================
     // Solid terrain - tunnel
     // ============================================================================
 
-    G4double slopeAngle = atan(gTunnelGrad);
     G4RotationMatrix flip(
         G4ThreeVector(0.0, 1.0, 0.0),
-        -90 * deg - slopeAngle
+        -90 * deg - fTunnelSlopeAngle
     );
     G4ThreeVector correct(
-        0.5 * gTunnelLength * (cos(slopeAngle) - 1.0),
+        0.5 * fTunnelLength * (cos(fTunnelSlopeAngle) - 1.0),
         0.0,
-        0.5 * gTunnelLength * sin(slopeAngle)
+        0.5 * fTunnelLength * sin(fTunnelSlopeAngle)
     );
     G4ThreeVector move(
-        gTunnelEntranceX + 0.5 * gTunnelLength,
+        fTunnelEntranceX + 0.5 * fTunnelLength,
         0.0,
-        gTunnelEntranceAltitude + groundToCentre
+        fTunnelEntranceAltitude + groundToCentre
     );
-    auto solidTerrainWithTunnel = new G4SubtractionSolid(
-        gTerrainName + "-" + gTunnelName,
-        solidTerrain,
+    auto fSolidTerrainWithTunnel = new G4SubtractionSolid(
+        fTerrainName + "-" + fTunnelName,
+        fSolidTerrain,
         solidTunnel,
         G4Transform3D(
             flip,
@@ -98,24 +141,24 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
 
     // world material
     //
-    auto worldMaterial = nist->FindOrBuildMaterial(gWorldMaterialName);
+    auto worldMaterial = nist->BuildMaterialWithNewDensity(fWorldMaterialName, "G4_AIR", DBL_EPSILON);
 
     // world construction
 
     auto solidWorld = new G4Box(
-        gWorldName,
-        solidTerrain->GetMaxXExtent() + 1 * mm,
-        solidTerrain->GetMaxYExtent() + 1 * mm,
-        solidTerrain->GetMaxZExtent() + 1 * mm
+        fWorldName,
+        std::max(fabs(fTerrainMaxX), fabs(fTerrainMinX)) + 1 * mm,
+        std::max(fabs(fTerrainMaxY), fabs(fTerrainMinY)) + 1 * mm,
+        fTerrainMaxZ + 1 * mm
     );
     auto logicalWorld = new G4LogicalVolume(
         solidWorld,
         worldMaterial,
-        gWorldName
+        fWorldName
     );
     auto physicalWorld = new G4PVPlacement(
         G4Transform3D(),
-        gWorldName,
+        fWorldName,
         logicalWorld,
         nullptr,
         false, 0,
@@ -129,7 +172,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // terrain material
     //
     auto terrainMaterial = new G4Material(
-        gTerrainMaterialName,
+        fTerrainMaterialName,
         3.0 * g / cm3,
         6,
         kStateSolid
@@ -144,13 +187,13 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // terrain - tunnel construction
 
     auto logicalTerrainWithTunnel = new G4LogicalVolume(
-        solidTerrainWithTunnel,
+        fSolidTerrainWithTunnel,
         terrainMaterial,
-        gTerrainName + "-" + gTunnelName
+        fTerrainName + "-" + fTunnelName
     );
     new G4PVPlacement(
         G4Transform3D(),
-        gTerrainName + "-" + gTunnelName,
+        fTerrainName + "-" + fTunnelName,
         logicalTerrainWithTunnel,
         physicalWorld,
         false, 0,
@@ -165,41 +208,34 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     //
     auto MuGridMaterial = nist->FindOrBuildMaterial("G4_POLYCARBONATE");
 
+    fMuGridPosition =
+        G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + fMuGridHalfSize[2] + fMuGridHeight) +
+        G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
+
     // MuGrid construction
 
     auto solidMuGrid = new G4Box(
-        gMuGridName,
-        gMuGridHalfSize[0],
-        gMuGridHalfSize[1],
-        gMuGridHalfSize[2]
+        fMuGridName,
+        fMuGridHalfSize[0],
+        fMuGridHalfSize[1],
+        fMuGridHalfSize[2]
     );
     fLogicalMuGrid = new G4LogicalVolume(
         solidMuGrid,
         MuGridMaterial,
-        gMuGridName
+        fMuGridName
     );
-
-    G4ThreeVector MuGridOutOfTunnelSection(
-        gTunnelEntranceX, 0, gTunnelEntranceAltitude + gMuGridHalfSize[2] + gMuGridHeight);
-    G4ThreeVector MuGridInsideOfTunnelSection(
-        gMuGridPosition[0] - gTunnelEntranceX, gMuGridPosition[1]);
-    MuGridInsideOfTunnelSection.rotateY(-slopeAngle);
-    G4ThreeVector MuGridAbsolutePosition(MuGridOutOfTunnelSection + MuGridInsideOfTunnelSection);
-
     new G4PVPlacement(
         G4Transform3D(
             G4RotationMatrix(),
-            MuGridAbsolutePosition
+            fMuGridPosition
         ),
-        gMuGridName,
+        fMuGridName,
         fLogicalMuGrid,
         physicalWorld,
         false, 0,
         checkOverlaps
     );
-
-    MuTQPrimaryGeneratorAction::fMuGridPosition = std::move(MuGridAbsolutePosition);
-    MuTQPrimaryGeneratorAction::fSphereRadius = solidTerrain->GetMaxZExtent();
 
     return physicalWorld;
 }
@@ -207,7 +243,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
 void MuTQDetectorConstruction::ConstructSDandField() {
     if (gRunningInBatch) {
         auto SDManager = G4SDManager::GetSDMpointer();
-        auto MuGridSD = new MuTQMuGridSD(gMuGridName);
+        auto MuGridSD = new MuTQMuGridSD(fMuGridName);
         SDManager->AddNewDetector(MuGridSD);
         SetSensitiveDetector(fLogicalMuGrid, MuGridSD);
     }
@@ -240,7 +276,7 @@ G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
     // Get mesh boundary.
     auto boundaryPointIndex(CreateMapFromCSV<std::string, G4int>(boundaryFile)["AntiClockWiseBoundary"]);
 
-    G4TessellatedSolid* terrain = new G4TessellatedSolid(gTerrainName);
+    G4TessellatedSolid* terrain = new G4TessellatedSolid(fTerrainName);
 
     // Create top surface.
     for (const auto& aMesh : topMesh) {

@@ -4,10 +4,9 @@
 #include "g4analysis.hh"
 
 #include "MuTQPrimaryGeneratorAction.hh"
+#include "MuTQDetectorConstruction.hh"
 #include "MuTQConfigs.hh"
-
-G4double MuTQPrimaryGeneratorAction::fSphereRadius = 0.0;
-G4ThreeVector MuTQPrimaryGeneratorAction::fMuGridPosition;
+#include "MuTQExtern.hh"
 
 MuTQPrimaryGeneratorAction::MuTQPrimaryGeneratorAction() :
     G4VUserPrimaryGeneratorAction(),
@@ -28,26 +27,28 @@ void MuTQPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     }
 }
 
-constexpr G4double _2_pi = 2.0 * M_PI;
-
 void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
     G4double theta = 0.0;
     G4double energy = 0.0;
     FindEnergyAndTheta(energy, theta);
 
     G4double sinTheta = sin(theta);
-    G4double phi = _2_pi * G4UniformRand();
-    auto relativePositionVec = G4ThreeVector(
+    G4double phi = 2.0 * M_PI * G4UniformRand();
+    auto comingDirection = G4ThreeVector(
         sinTheta * cos(phi),
         sinTheta * sin(phi),
         cos(theta)
-    ) * fSphereRadius;
+    );
 
     auto sphereCentre = G4ThreeVector(
         2.0 * G4UniformRand() - 1.0,
         2.0 * G4UniformRand() - 1.0,
         0.0
     ) * effectiveRange;
+    G4ThreeVector target = MuTQDetectorConstruction::GetMuGridPosition() + sphereCentre;
+
+    G4ThreeVector position = target + comingDirection
+        * ((MuTQDetectorConstruction::GetTerrainMaxZExtent() - target.z()) / comingDirection.z());
 
     // Muon definition.
     if (G4UniformRand() > 0.563319) {
@@ -56,8 +57,8 @@ void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
         fParticleGun->SetParticleDefinition(G4MuonPlus::Definition());
     }
     fParticleGun->SetParticleEnergy(energy);
-    fParticleGun->SetParticlePosition(relativePositionVec + sphereCentre + fMuGridPosition);
-    fParticleGun->SetParticleMomentumDirection(-relativePositionVec);
+    fParticleGun->SetParticlePosition(position);
+    fParticleGun->SetParticleMomentumDirection(-comingDirection);
 }
 
 void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& theta) const {
@@ -67,7 +68,7 @@ void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& 
         theta = G4UniformRand() * M_PI_2;
         y = G4UniformRand();
     } while (y > EnergySpectrum(energy, theta));
-    energy *= GeV;
+    energy *= CLHEP::GeV;
 }
 
 // Note: E in GeV, theta in rad.
