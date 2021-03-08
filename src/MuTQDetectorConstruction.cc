@@ -48,15 +48,16 @@ G4ThreeVector MuTQDetectorConstruction::fMuGridPosition = G4ThreeVector();
 // MuGrid
 
 const G4String MuTQDetectorConstruction::fMuGridName = "MuGrid";
-const G4double MuTQDetectorConstruction::fMuGridHeight = 50 * cm;
-const G4double MuTQDetectorConstruction::fMuGridHalfSize[3] = { 25 * cm, 25 * cm, 25 * cm };
+const G4double MuTQDetectorConstruction::fMuGridPlaceHeight = 50 * cm;
+const G4double MuTQDetectorConstruction::fMuGridWidth = 10 * cm;
+const G4double MuTQDetectorConstruction::fMuGridLength = 60 * cm;
 
 // temp object
 
 const G4String MuTQDetectorConstruction::fTempName = "_tmp";
 
 MuTQDetectorConstruction::MuTQDetectorConstruction() :
-    fLogicalMuGrid(nullptr) {}
+    fLogicalSingleMuGrid(nullptr) {}
 
 G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // Set if check overlaps
@@ -209,33 +210,65 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     auto MuGridMaterial = nist->FindOrBuildMaterial("G4_POLYCARBONATE");
 
     fMuGridPosition =
-        G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + fMuGridHalfSize[2] + fMuGridHeight) +
-        G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
+        G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
+        + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
 
     // MuGrid construction
 
-    auto solidMuGrid = new G4Box(
+    auto solidSingleMuGrid = new G4Box(
         fMuGridName,
-        fMuGridHalfSize[0],
-        fMuGridHalfSize[1],
-        fMuGridHalfSize[2]
+        fMuGridLength * 0.5,
+        fMuGridWidth * 0.5,
+        fMuGridWidth * 0.5
     );
-    fLogicalMuGrid = new G4LogicalVolume(
-        solidMuGrid,
+    fLogicalSingleMuGrid = new G4LogicalVolume(
+        solidSingleMuGrid,
         MuGridMaterial,
         fMuGridName
     );
-    new G4PVPlacement(
-        G4Transform3D(
-            G4RotationMatrix(),
-            fMuGridPosition
-        ),
-        fMuGridName,
-        fLogicalMuGrid,
-        physicalWorld,
-        false, 0,
-        checkOverlaps
-    );
+    G4ThreeVector oddLayerPosition(-2.0 * fMuGridWidth, 0.0, 2.5 * fMuGridWidth);
+    G4ThreeVector evenLayerPosition(0.0, 2.0 * fMuGridWidth, 1.5 * fMuGridWidth);
+    G4bool isOdd = true;
+    for (size_t i = 0; i < 18; ++i) {
+        if (isOdd) {
+            new G4PVPlacement(
+                G4Transform3D(
+                    G4RotationMatrix(G4ThreeVector(0.0, 0.0, 1.0), 90 * deg),
+                    oddLayerPosition + fMuGridPosition
+                ),
+                fMuGridName,
+                fLogicalSingleMuGrid,
+                physicalWorld,
+                true, i,
+                checkOverlaps
+            );
+            oddLayerPosition.setX(oddLayerPosition.x() + 2.0 * fMuGridWidth);
+        } else {
+            new G4PVPlacement(
+                G4Transform3D(
+                    G4RotationMatrix(),
+                    evenLayerPosition + fMuGridPosition
+                ),
+                fMuGridName,
+                fLogicalSingleMuGrid,
+                physicalWorld,
+                true, i,
+                checkOverlaps
+            );
+            evenLayerPosition.setY(evenLayerPosition.y() - 2.0 * fMuGridWidth);
+        }
+        if ((i + 1) % 3 == 0) {
+            if (isOdd) {
+                oddLayerPosition.setZ(oddLayerPosition.z() - 2.0 * fMuGridWidth);
+                oddLayerPosition.setX(-2.0 * fMuGridWidth);
+                isOdd = false;
+            } else {
+                evenLayerPosition.setZ(evenLayerPosition.z() - 2.0 * fMuGridWidth);
+                evenLayerPosition.setY(2.0 * fMuGridWidth);
+                isOdd = true;
+            }
+        }
+    }
 
     return physicalWorld;
 }
@@ -245,7 +278,7 @@ void MuTQDetectorConstruction::ConstructSDandField() {
         auto SDManager = G4SDManager::GetSDMpointer();
         auto MuGridSD = new MuTQMuGridSD(fMuGridName);
         SDManager->AddNewDetector(MuGridSD);
-        SetSensitiveDetector(fLogicalMuGrid, MuGridSD);
+        SetSensitiveDetector(fLogicalSingleMuGrid, MuGridSD);
     }
 }
 

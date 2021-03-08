@@ -32,8 +32,9 @@ public:
     // MuGrid
 
     static const G4String fMuGridName;
-    static const G4double fMuGridHeight;
-    static const G4double fMuGridHalfSize[3];
+    static const G4double fMuGridPlaceHeight;
+    static const G4double fMuGridWidth;
+    static const G4double fMuGridLength;
 
     // temp object
 
@@ -44,7 +45,7 @@ private:
     static G4TessellatedSolid* fSolidTerrain;
     // Logical MuGrid
     // Note: For register SD.
-    G4LogicalVolume* fLogicalMuGrid;
+    G4LogicalVolume* fLogicalSingleMuGrid;
 
     static G4double fTerrainMaxX;
     static G4double fTerrainMinX;
