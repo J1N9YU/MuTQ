@@ -32,12 +32,9 @@ G4bool MuTQMuGridSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     auto preStepPoint = step->GetPreStepPoint();
     // A new hit.
     auto hit = new MuTQMuGridHit();
-    hit->SetPosition(preStepPoint->GetPosition());
-    hit->SetTime(preStepPoint->GetGlobalTime());
+    hit->SetScintillatorID(preStepPoint->GetPhysicalVolume()->GetCopyNo());
     hit->SetKineticEnergy(preStepPoint->GetKineticEnergy());
     hit->SetMomentum(preStepPoint->GetMomentum());
-    hit->SetEnergyDeposition(step->GetTotalEnergyDeposit());
-    hit->SetParticleDefinition(presentParticle);
     fMuonHitsCollection->insert(hit);
     return true;
 }
@@ -59,11 +56,27 @@ void MuTQMuGridSD::EndOfEvent(G4HCofThisEvent*) {
 }
 
 void MuTQMuGridSD::FillHistrogram() const {
-    for (size_t i = 0; i < fMuonHitsCollection->entries(); ++i) {
-        auto hit = static_cast<MuTQMuGridHit*>(fMuonHitsCollection->GetHit(i));
-        fAnalysisManager->FillH1(3, hit->GetKineticEnergy());
-        fAnalysisManager->FillH1(4, M_PI - hit->GetMomentum().theta());
-        fAnalysisManager->FillH1(5, hit->GetMomentum().phi());
+    if (fMuonHitsCollection->entries() == 0) { return; }
+
+    auto hit = static_cast<MuTQMuGridHit*>(fMuonHitsCollection->GetHit(0));
+
+    fAnalysisManager->FillH1(3, hit->GetKineticEnergy());
+    fAnalysisManager->FillH1(4, M_PI - hit->GetMomentum().theta());
+    fAnalysisManager->FillH1(5, hit->GetMomentum().phi());
+    fAnalysisManager->FillH1(6, fMuonHitsCollection->entries());
+    if (fMuonHitsCollection->entries() == 1) {
+        fAnalysisManager->FillH1(7, hit->GetScintillatorID());
+        fAnalysisManager->FillH1(11, hit->GetKineticEnergy());
+        fAnalysisManager->FillH1(12, M_PI - hit->GetMomentum().theta());
+        fAnalysisManager->FillH1(13, hit->GetMomentum().phi());
+        return;
     }
+    fAnalysisManager->FillH1(8, hit->GetKineticEnergy());
+    fAnalysisManager->FillH1(9, M_PI - hit->GetMomentum().theta());
+    fAnalysisManager->FillH1(10, hit->GetMomentum().phi());
+    G4int histID = 3 * fMuonHitsCollection->entries() + 8;
+    fAnalysisManager->FillH1(histID, hit->GetKineticEnergy());++histID;
+    fAnalysisManager->FillH1(histID, M_PI - hit->GetMomentum().theta());++histID;
+    fAnalysisManager->FillH1(histID, hit->GetMomentum().phi());
 }
 

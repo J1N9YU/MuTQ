@@ -48,11 +48,37 @@ void MuTQRunAction::EndOfRunAction(const G4Run*) {
 }
 
 void MuTQRunAction::CreateTreeAndHistrogram() const {
-    fAnalysisManager->CreateH1("EnergyOfGeneratedEvent", "Energy", 200, 0 * GeV, 1 * TeV, "GeV");
-    fAnalysisManager->CreateH1("ZenithAngleOfGeneratedEvent", "ZenithAngle", 90, 0 * deg, 90 * deg, "deg");
-    fAnalysisManager->CreateH1("PolarAngleOfGeneratedEvent", "PolarAngle", 360, -180 * deg, 180 * deg, "deg");
-    fAnalysisManager->CreateH1("EnergyOfHitEvent", "Energy", 200, 0 * GeV, 1 * TeV, "GeV");
-    fAnalysisManager->CreateH1("ZenithAngleOfHitEvent", "ZenithAngle", 90, 0 * deg, 90 * deg, "deg");
-    fAnalysisManager->CreateH1("PolarAngleOfHitEvent", "PolarAngle", 360, -180 * deg, 180 * deg, "deg");
+#define MuTQ_HISTROGRAM_ENERGY "Energy", 200, 0 * GeV, 1 * TeV, "GeV"
+#define MuTQ_HISTROGRAM_ZENITH "ZenithAngle", 90, 0 * deg, 90 * deg, "deg"
+#define MuTQ_HISTROGRAM_POLAR "PolarAngle", 360, -180 * deg, 180 * deg, "deg"
+    fAnalysisManager->CreateH1("EnergyOfGenerated", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfGenerated", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfGenerated", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("NumOfScintillatorHit", "NumOfScintillator", 7, 1, 8);
+    fAnalysisManager->CreateH1("ScintillatorIDOfUnreconstructable", "ScintillatorID", 18, 1, 19);
+    fAnalysisManager->CreateH1("EnergyOfReconstructable", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfReconstructable", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfReconstructable", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfUnreconstructable", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfUnreconstructable", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfUnreconstructable", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit2", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit2", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit2", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit3", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit3", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit3", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit4", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit4", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit4", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit5", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit5", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit5", MuTQ_HISTROGRAM_POLAR);
+    fAnalysisManager->CreateH1("EnergyOfHit6", MuTQ_HISTROGRAM_ENERGY);
+    fAnalysisManager->CreateH1("ZenithAngleOfHit6", MuTQ_HISTROGRAM_ZENITH);
+    fAnalysisManager->CreateH1("PolarAngleOfHit6", MuTQ_HISTROGRAM_POLAR);
 }
 

@@ -11,7 +11,7 @@ class G4ParticleGun;
 class G4Event;
 
 constexpr G4double maxE_GeV = 10000;
-constexpr G4double effectiveRange = 0.3 * CLHEP::m;
+constexpr G4double effectiveRange = 2.0 * CLHEP::m;
 
 class MuTQPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:

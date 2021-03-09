@@ -142,7 +142,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
 
     // world material
     //
-    auto worldMaterial = nist->BuildMaterialWithNewDensity(fWorldMaterialName, "G4_AIR", DBL_EPSILON);
+    auto worldMaterial = nist->BuildMaterialWithNewDensity(fWorldMaterialName, "G4_AIR", 1e-25 * g / cm3);
 
     // world construction
 

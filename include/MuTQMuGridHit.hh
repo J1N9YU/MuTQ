@@ -5,18 +5,17 @@
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
-#include "G4VPhysicalVolume.hh"
 #include "G4ParticleDefinition.hh"
 
 class MuTQMuGridHit : public G4VHit {
 private:
     G4int                       fScintillatorID;
-    G4double                    fTime;
-    G4ThreeVector               fPosition;
+    // G4double                    fTime;
+    // G4ThreeVector               fPosition;
     G4ThreeVector               fMomentum;
     G4double                    fKineticEnergy;
-    G4double                    fEnergyDeposition;
-    const G4ParticleDefinition* fParticleDefinition;
+    // G4double                    fEnergyDeposition;
+    // const G4ParticleDefinition* fParticleDefinition;
 
 public:
     MuTQMuGridHit();
@@ -28,22 +27,22 @@ public:
     inline void operator delete(void* aHit);
 
     const G4int& GetScintillatorID() const { return fScintillatorID; }
-    const G4double& GetTime() const { return fTime; }
-    const G4ThreeVector& GetPosition() const { return fPosition; }
+    // const G4double& GetTime() const { return fTime; }
+    // const G4ThreeVector& GetPosition() const { return fPosition; }
     const G4ThreeVector& GetMomentum() const { return fMomentum; }
     const G4double& GetKineticEnergy() const { return fKineticEnergy; }
-    const G4double& GetEnergyDeposition() const { return fEnergyDeposition; }
-    const G4ParticleDefinition* GetParticleDefinition() const { return fParticleDefinition; }
+    // const G4double& GetEnergyDeposition() const { return fEnergyDeposition; }
+    // const G4ParticleDefinition* GetParticleDefinition() const { return fParticleDefinition; }
 
     void SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
-    void SetTime(const G4double& time) { fTime = time; }
-    void SetPosition(const G4ThreeVector& position) { fPosition = position; }
+    // void SetTime(const G4double& time) { fTime = time; }
+    // void SetPosition(const G4ThreeVector& position) { fPosition = position; }
     void SetMomentum(const G4ThreeVector& momentum) { fMomentum = momentum; }
     void SetKineticEnergy(const G4double& kineticEnergy) { fKineticEnergy = kineticEnergy; }
-    void SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
-    void SetParticleDefinition(const G4ParticleDefinition* particleDefinition) {
-        fParticleDefinition = particleDefinition;
-    }
+    // void SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
+    // void SetParticleDefinition(const G4ParticleDefinition* particleDefinition) {
+    //     fParticleDefinition = particleDefinition;
+    // }
 };
 
 typedef G4THitsCollection<MuTQMuGridHit> MuTQMuGridHitsCollection;
