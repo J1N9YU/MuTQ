@@ -31,24 +31,26 @@ void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
     G4double theta = 0.0;
     G4double energy = 0.0;
     FindEnergyAndTheta(energy, theta);
-
-    G4double sinTheta = sin(theta);
     G4double phi = 2.0 * M_PI * G4UniformRand();
-    auto comingDirection = G4ThreeVector(
-        sinTheta * cos(phi),
-        sinTheta * sin(phi),
-        cos(theta)
-    );
 
-    auto sphereCentre = G4ThreeVector(
-        2.0 * G4UniformRand() - 1.0,
-        2.0 * G4UniformRand() - 1.0,
-        0.0
-    ) * effectiveRange;
-    G4ThreeVector target = MuTQDetectorConstruction::GetMuGridPosition() + sphereCentre;
+    // basis vectors parallel to muon target.
+    auto targetY = G4ThreeVector(0.0, 1.0, 0.0).rotateZ(phi);
+    // basis vectors parallel to muon target.
+    auto targetX = G4ThreeVector(1.0, 0.0, 0.0).rotateZ(phi).rotate(targetY, theta);
+    // basis vectors propotional to muon target, point to muon coming direction.
+    auto targetZ = G4ThreeVector(0.0, 0.0, 1.0).rotate(targetY, theta);
+    // x coordinate of the aim(in target frame).
+    G4double x;
+    // y coordinate of the aim(in target frame).
+    G4double y;
+    do {
+        x = 2.0 * targetRadius * G4UniformRand() - targetRadius;
+        y = 2.0 * targetRadius * G4UniformRand() - targetRadius;
+    } while (x * x + y * y > targetRadius * targetRadius);
+    G4ThreeVector aim = MuTQDetectorConstruction::GetMuGridPosition() + x * targetX + y * targetY;
 
-    G4ThreeVector position = target + comingDirection
-        * ((MuTQDetectorConstruction::GetTerrainMaxZExtent() - target.z()) / comingDirection.z());
+    G4ThreeVector position = aim + targetZ
+        * ((MuTQDetectorConstruction::GetTerrainMaxZExtent() - aim.z()) / targetZ.z());
 
     // Muon definition.
     if (G4UniformRand() > 0.563319) {
@@ -58,7 +60,7 @@ void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
     }
     fParticleGun->SetParticleEnergy(energy);
     fParticleGun->SetParticlePosition(position);
-    fParticleGun->SetParticleMomentumDirection(-comingDirection);
+    fParticleGun->SetParticleMomentumDirection(-targetZ);
 }
 
 void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& theta) const {

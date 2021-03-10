@@ -3,11 +3,14 @@
 #include "G4SystemOfUnits.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
+#include "G4TessellatedSolid.hh"
 #include "G4TriangularFacet.hh"
 #include "G4QuadrangularFacet.hh"
 #include "G4SubtractionSolid.hh"
+#include "G4UnionSolid.hh"
 #include "G4Tubs.hh"
 #include "G4SDManager.hh"
+#include "G4PVPlacement.hh"
 
 #include "MuTQExtern.hh"
 #include "MuTQConfigs.hh"
@@ -71,16 +74,11 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // ============================================================================
 
     if (!fSolidTerrain) {
-        fSolidTerrain = ConstructTerrain(
+        ConstructTerrain(
             "datafiles/terrainPoints.csv",
             "datafiles/terrainMeshDef.csv",
             "datafiles/terrainBoundaryPoints.csv"
         );
-        fTerrainMaxX = fSolidTerrain->GetMaxXExtent();
-        fTerrainMinX = fSolidTerrain->GetMinXExtent();
-        fTerrainMaxY = fSolidTerrain->GetMaxYExtent();
-        fTerrainMinY = fSolidTerrain->GetMinYExtent();
-        fTerrainMaxZ = fSolidTerrain->GetMaxZExtent();
     }
 
     // ============================================================================
@@ -174,7 +172,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     //
     auto terrainMaterial = new G4Material(
         fTerrainMaterialName,
-        3.0 * g / cm3,
+        2.6 * g / cm3,
         6,
         kStateSolid
     );
@@ -209,9 +207,15 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     //
     auto MuGridMaterial = nist->FindOrBuildMaterial("G4_POLYCARBONATE");
 
-    fMuGridPosition =
-        G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
-        + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
+    if (gMuGridPosition[0] > fTunnelEntranceX) {
+        fMuGridPosition =
+            G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
+            + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
+    } else {
+        fMuGridPosition =
+            G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
+            + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]);
+    }
 
     // MuGrid construction
 
@@ -282,7 +286,7 @@ void MuTQDetectorConstruction::ConstructSDandField() {
     }
 }
 
-G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
+void MuTQDetectorConstruction::ConstructTerrain(
     const std::string& pointsFile, const std::string& meshFile, const std::string& boundaryFile) {
     // Get points.
     auto pointMap(CreateMapFromCSV<G4int, G4double>(pointsFile));
@@ -309,11 +313,11 @@ G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
     // Get mesh boundary.
     auto boundaryPointIndex(CreateMapFromCSV<std::string, G4int>(boundaryFile)["AntiClockWiseBoundary"]);
 
-    G4TessellatedSolid* terrain = new G4TessellatedSolid(fTerrainName);
+    fSolidTerrain = new G4TessellatedSolid();
 
     // Create top surface.
     for (const auto& aMesh : topMesh) {
-        terrain->AddFacet(
+        fSolidTerrain->AddFacet(
             new G4TriangularFacet(
                 std::get<0>(aMesh),
                 std::get<1>(aMesh),
@@ -324,7 +328,7 @@ G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
     }
     // Create bottom surface.
     for (const auto& aMesh : botMesh) {
-        terrain->AddFacet(
+        fSolidTerrain->AddFacet(
             new G4TriangularFacet(
                 std::get<0>(aMesh),
                 std::get<1>(aMesh),
@@ -337,7 +341,7 @@ G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
     auto last = boundaryPointIndex.end() - 1;
     auto here = boundaryPointIndex.begin();
     do {
-        terrain->AddFacet(
+        fSolidTerrain->AddFacet(
             new G4QuadrangularFacet(
                 point[*here],
                 point[*last],
@@ -350,9 +354,13 @@ G4TessellatedSolid* MuTQDetectorConstruction::ConstructTerrain(
         ++here;
     } while (here != boundaryPointIndex.end());
 
-    terrain->SetSolidClosed(true);
+    fSolidTerrain->SetSolidClosed(true);
 
-    return terrain;
+    fTerrainMaxX = fSolidTerrain->GetMaxXExtent();
+    fTerrainMinX = fSolidTerrain->GetMinXExtent();
+    fTerrainMaxY = fSolidTerrain->GetMaxYExtent();
+    fTerrainMinY = fSolidTerrain->GetMinYExtent();
+    fTerrainMaxZ = fSolidTerrain->GetMaxZExtent();
 }
 
 void MuTQDetectorConstruction::RearrangeToCounterClockWise(Triangle& t) {

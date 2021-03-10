@@ -9,14 +9,14 @@
 #define MuTQ_USING_TIME_RANDOM_SEED       false
 #endif
 
-// Kill gamma if enabled.
-#ifndef MuTQ_KILL_GAMMA
-#define MuTQ_KILL_GAMMA                   true
-#endif
-
 // Kill electron if enabled.
 #ifndef MuTQ_KILL_ELECTRON
 #define MuTQ_KILL_ELECTRON                true
+#endif
+
+// Kill gamma if enabled.
+#ifndef MuTQ_KILL_GAMMA
+#define MuTQ_KILL_GAMMA                   true
 #endif
 
 // Using Reyna energy spectrum if enabled.

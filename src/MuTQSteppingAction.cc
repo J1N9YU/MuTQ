@@ -4,6 +4,7 @@
 #include "G4Gamma.hh"
 #include "G4Electron.hh"
 #include "MuTQConfigs.hh"
+#include "MuTQDetectorConstruction.hh"
 
 MuTQSteppingAction::MuTQSteppingAction() :
     G4UserSteppingAction() {}
@@ -11,15 +12,16 @@ MuTQSteppingAction::MuTQSteppingAction() :
 MuTQSteppingAction::~MuTQSteppingAction() {}
 
 void MuTQSteppingAction::UserSteppingAction(const G4Step* step) {
-#if MuTQ_KILL_GAMMA
-    if (step->GetTrack()->GetParticleDefinition() == G4Gamma::Definition()) {
-        step->GetTrack()->SetTrackStatus(fStopAndKill);
-    }
-#endif
+    if (
 #if MuTQ_KILL_ELECTRON
-    if (step->GetTrack()->GetParticleDefinition() == G4Electron::Definition()) {
+        step->GetTrack()->GetParticleDefinition() == G4Electron::Definition() ||
+#endif
+#if MuTQ_KILL_GAMMA
+        step->GetTrack()->GetParticleDefinition() == G4Gamma::Definition() ||
+#endif
+        step->GetPreStepPoint()->GetPosition().z() < MuTQDetectorConstruction::fTunnelEntranceAltitude
+        ) {
         step->GetTrack()->SetTrackStatus(fStopAndKill);
     }
-#endif
 }
 

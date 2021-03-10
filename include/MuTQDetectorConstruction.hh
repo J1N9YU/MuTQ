@@ -3,7 +3,6 @@
 
 #include "globals.hh"
 #include "G4TessellatedSolid.hh"
-#include "G4PVPlacement.hh"
 #include "G4VUserDetectorConstruction.hh"
 
 class MuTQDetectorConstruction : public G4VUserDetectorConstruction {
@@ -71,7 +70,7 @@ private:
     virtual void ConstructSDandField();
 
     typedef std::array<G4ThreeVector, 3> Triangle;
-    static G4TessellatedSolid* ConstructTerrain(
+    static void ConstructTerrain(
         const std::string& pointsFile, const std::string& meshFile, const std::string& boundaryFile);
     static void RearrangeToCounterClockWise(Triangle& t);
     static void RearrangeToClockWise(Triangle& t);
