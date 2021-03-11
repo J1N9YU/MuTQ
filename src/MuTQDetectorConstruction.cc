@@ -12,7 +12,6 @@
 #include "G4SDManager.hh"
 #include "G4PVPlacement.hh"
 
-#include "MuTQExtern.hh"
 #include "MuTQConfigs.hh"
 #include "CreateMapFromCSV.hh"
 #include "MuTQMuGridSD.hh"
@@ -46,6 +45,7 @@ const G4double MuTQDetectorConstruction::fTunnelSlopeAngle = atan(fTunnelGrad);
 const G4double MuTQDetectorConstruction::fTunnelEntranceX = 55 * m;
 const G4double MuTQDetectorConstruction::fTunnelEntranceAltitude = 10.982 * m;
 const G4double MuTQDetectorConstruction::fTunnelLength = 529.389 * m - fTunnelEntranceX;
+G4double MuTQDetectorConstruction::fMuGridRelativePosition[2] = { 0.0,0.0 };
 G4ThreeVector MuTQDetectorConstruction::fMuGridPosition = G4ThreeVector();
 
 // MuGrid
@@ -124,7 +124,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
         0.0,
         fTunnelEntranceAltitude + groundToCentre
     );
-    auto fSolidTerrainWithTunnel = new G4SubtractionSolid(
+    auto solidTerrainWithTunnel = new G4SubtractionSolid(
         fTerrainName + "-" + fTunnelName,
         fSolidTerrain,
         solidTunnel,
@@ -186,7 +186,7 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     // terrain - tunnel construction
 
     auto logicalTerrainWithTunnel = new G4LogicalVolume(
-        fSolidTerrainWithTunnel,
+        solidTerrainWithTunnel,
         terrainMaterial,
         fTerrainName + "-" + fTunnelName
     );
@@ -207,14 +207,16 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
     //
     auto MuGridMaterial = nist->FindOrBuildMaterial("G4_POLYCARBONATE");
 
-    if (gMuGridPosition[0] > fTunnelEntranceX) {
+    if (fMuGridRelativePosition[0] > fTunnelEntranceX) {
         fMuGridPosition =
             G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
-            + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]).rotateY(-fTunnelSlopeAngle);
+            + G4ThreeVector(
+                fMuGridRelativePosition[0] - fTunnelEntranceX, fMuGridRelativePosition[1]
+            ).rotateY(-fTunnelSlopeAngle);
     } else {
         fMuGridPosition =
             G4ThreeVector(fTunnelEntranceX, 0, fTunnelEntranceAltitude + 3 * fMuGridWidth + fMuGridPlaceHeight)
-            + G4ThreeVector(gMuGridPosition[0] - fTunnelEntranceX, gMuGridPosition[1]);
+            + G4ThreeVector(fMuGridRelativePosition[0] - fTunnelEntranceX, fMuGridRelativePosition[1]);
     }
 
     // MuGrid construction
@@ -278,12 +280,10 @@ G4VPhysicalVolume* MuTQDetectorConstruction::Construct() {
 }
 
 void MuTQDetectorConstruction::ConstructSDandField() {
-    if (gRunningInBatch) {
-        auto SDManager = G4SDManager::GetSDMpointer();
-        auto MuGridSD = new MuTQMuGridSD(fMuGridName);
-        SDManager->AddNewDetector(MuGridSD);
-        SetSensitiveDetector(fLogicalSingleMuGrid, MuGridSD);
-    }
+    auto SDManager = G4SDManager::GetSDMpointer();
+    auto MuGridSD = new MuTQMuGridSD(fMuGridName);
+    SDManager->AddNewDetector(MuGridSD);
+    SetSensitiveDetector(fLogicalSingleMuGrid, MuGridSD);
 }
 
 void MuTQDetectorConstruction::ConstructTerrain(

@@ -59,6 +59,8 @@ public:
 
     virtual G4VPhysicalVolume* Construct();
 
+    static G4double fMuGridRelativePosition[2];
+
     static G4double GetTerrainMaxXExtent() { return fTerrainMaxX; }
     static G4double GetTerrainMinXExtent() { return fTerrainMinX; }
     static G4double GetTerrainMaxYExtent() { return fTerrainMaxY; }

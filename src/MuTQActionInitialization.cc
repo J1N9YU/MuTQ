@@ -14,7 +14,7 @@ void MuTQActionInitialization::BuildForMaster() const {
 }
 
 void MuTQActionInitialization::Build() const {
-    SetUserAction(new MuTQPrimaryGeneratorAction);
+    SetUserAction(new MuTQPrimaryGeneratorAction());
     SetUserAction(new MuTQRunAction());
     SetUserAction(new MuTQEventAction());
     SetUserAction(new MuTQSteppingAction());

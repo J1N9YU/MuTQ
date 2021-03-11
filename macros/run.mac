@@ -2,7 +2,7 @@
 
 # Change the default number of workers (in multi-threading mode) 
 /run/useMaximumLogicalCores
-#/run/numberOfThreads 15
+#/run/numberOfThreads 1
 
 # Initialize kernel
 /run/initialize
@@ -12,4 +12,4 @@
 /event/verbose 0
 /tracking/verbose 0
 
-/run/beamOn 100000
+/run/beamOn 1000000

@@ -1,33 +1,23 @@
 #include "G4MuonPlus.hh"
 #include "G4MuonMinus.hh"
 #include "Randomize.hh"
-#include "g4analysis.hh"
 
 #include "MuTQPrimaryGeneratorAction.hh"
 #include "MuTQDetectorConstruction.hh"
 #include "MuTQConfigs.hh"
-#include "MuTQExtern.hh"
+#include "CreateMapFromCSV.hh"
 
 MuTQPrimaryGeneratorAction::MuTQPrimaryGeneratorAction() :
     G4VUserPrimaryGeneratorAction(),
-    fParticleGun(new G4ParticleGun(1)) {}
+    fMuonPlusGun(new G4ParticleGun(G4MuonPlus::Definition())),
+    fMuonMinusGun(new G4ParticleGun(G4MuonMinus::Definition())) {}
 
 MuTQPrimaryGeneratorAction::~MuTQPrimaryGeneratorAction() {
-    delete fParticleGun;
+    delete fMuonPlusGun;
+    delete fMuonMinusGun;
 }
 
-void MuTQPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
-    SetMuonProperties();
-    fParticleGun->GeneratePrimaryVertex(anEvent);
-    if (gRunningInBatch) {
-        auto analysisManager = G4AnalysisManager::Instance();
-        analysisManager->FillH1(0, fParticleGun->GetParticleEnergy());
-        analysisManager->FillH1(1, M_PI - fParticleGun->GetParticleMomentumDirection().theta());
-        analysisManager->FillH1(2, fParticleGun->GetParticleMomentumDirection().phi());
-    }
-}
-
-void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
+void MuTQPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
     G4double theta = 0.0;
     G4double energy = 0.0;
     FindEnergyAndTheta(energy, theta);
@@ -40,27 +30,27 @@ void MuTQPrimaryGeneratorAction::SetMuonProperties() const {
     // basis vectors propotional to muon target, point to muon coming direction.
     auto targetZ = G4ThreeVector(0.0, 0.0, 1.0).rotate(targetY, theta);
     // x coordinate of the aim(in target frame).
-    G4double x;
+    G4double x = targetSize * (G4UniformRand() - 0.5);
     // y coordinate of the aim(in target frame).
-    G4double y;
-    do {
-        x = 2.0 * targetRadius * G4UniformRand() - targetRadius;
-        y = 2.0 * targetRadius * G4UniformRand() - targetRadius;
-    } while (x * x + y * y > targetRadius * targetRadius);
+    G4double y = targetSize * (G4UniformRand() - 0.5);
     G4ThreeVector aim = MuTQDetectorConstruction::GetMuGridPosition() + x * targetX + y * targetY;
 
     G4ThreeVector position = aim + targetZ
         * ((MuTQDetectorConstruction::GetTerrainMaxZExtent() - aim.z()) / targetZ.z());
 
-    // Muon definition.
-    if (G4UniformRand() > 0.563319) {
-        fParticleGun->SetParticleDefinition(G4MuonMinus::Definition());
+    // Gun of according muon definition.
+    G4ParticleGun* gun;
+    if (G4UniformRand() > 1.0 / (1.0 + 1.27)) {
+        gun = fMuonPlusGun;
     } else {
-        fParticleGun->SetParticleDefinition(G4MuonPlus::Definition());
+        gun = fMuonMinusGun;
     }
-    fParticleGun->SetParticleEnergy(energy);
-    fParticleGun->SetParticlePosition(position);
-    fParticleGun->SetParticleMomentumDirection(-targetZ);
+    gun->SetParticleEnergy(energy);
+    gun->SetParticlePosition(position);
+    gun->SetParticleMomentumDirection(-targetZ);
+    gun->GeneratePrimaryVertex(event);
+
+    MuTQAnalysisManager::Instance().Fill(0, energy, phi, theta);
 }
 
 void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& theta) const {

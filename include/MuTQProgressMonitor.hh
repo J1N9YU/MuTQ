@@ -8,9 +8,11 @@
 //
 class MuTQProgressMonitor {
 public:
-    static MuTQProgressMonitor* Instance();
+    static MuTQProgressMonitor& Instance() {
+        static MuTQProgressMonitor instance;
+        return instance;
+    }
 private:
-    static MuTQProgressMonitor* instance;
     MuTQProgressMonitor();
     ~MuTQProgressMonitor() {}
     MuTQProgressMonitor(const MuTQProgressMonitor&) = delete;
@@ -27,9 +29,9 @@ private:
 
 public:
     void SetNumberOfEventsPerReport(G4int n) { fEventsPerReport = n; }
-    void StartRun(G4int nEvent);
-    void CompleteAnEvent();
-    void EndRun();
+    void RunStart(G4int nEvent);
+    void EventComplete();
+    void RunComplete();
 };
 
 #endif

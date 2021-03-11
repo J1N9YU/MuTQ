@@ -1,16 +1,5 @@
 #include "MuTQProgressMonitor.hh"
 
-#include <mutex>
-
-MuTQProgressMonitor* MuTQProgressMonitor::instance = nullptr;
-
-MuTQProgressMonitor* MuTQProgressMonitor::Instance() {
-    if (!instance) {
-        instance = new MuTQProgressMonitor();
-    }
-    return instance;
-}
-
 MuTQProgressMonitor::MuTQProgressMonitor() :
     fRunStartTime(0),
     fRunEndTime(0),
@@ -20,7 +9,7 @@ MuTQProgressMonitor::MuTQProgressMonitor() :
     fEventsPerReport(100),
     fCPUTime(0) {}
 
-void MuTQProgressMonitor::StartRun(G4int nEvent) {
+void MuTQProgressMonitor::RunStart(G4int nEvent) {
     if (!fTimerStarted) {
         time(&fRunStartTime);
         fCPUTime = clock();
@@ -31,23 +20,22 @@ void MuTQProgressMonitor::StartRun(G4int nEvent) {
 }
 
 #ifdef G4MULTITHREADED
-std::mutex mtx;
+std::mutex mutexMuTQProgressMonitor;
 #endif
 
-void MuTQProgressMonitor::CompleteAnEvent() {
+void MuTQProgressMonitor::EventComplete() {
     if (!fTimerStarted) { return; }
 
-    time_t currentTime = time(nullptr);
-
 #ifdef G4MULTITHREADED
-    mtx.lock();
+    mutexMuTQProgressMonitor.lock();
 #endif
     ++fProcessedEvents;
     G4int lProcessedEvents = fProcessedEvents;
 #ifdef G4MULTITHREADED
-    mtx.unlock();
+    mutexMuTQProgressMonitor.unlock();
 #endif
 
+    time_t currentTime = time(nullptr);
     G4float avgTimeForOneEvent = ((G4float)(currentTime - fRunStartTime)) / lProcessedEvents;
     time_t estTimeRemain = ceilf(avgTimeForOneEvent * (fTotalEvents - lProcessedEvents));
 
@@ -60,7 +48,7 @@ void MuTQProgressMonitor::CompleteAnEvent() {
     }
 }
 
-void MuTQProgressMonitor::EndRun() {
+void MuTQProgressMonitor::RunComplete() {
     if (!fTimerStarted || fProcessedEvents < fTotalEvents) { return; }
     time(&fRunEndTime);
     fCPUTime = clock() - fCPUTime;

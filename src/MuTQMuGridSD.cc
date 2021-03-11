@@ -8,9 +8,7 @@
 
 MuTQMuGridSD::MuTQMuGridSD(const G4String& scintillatorSDName) :
     G4VSensitiveDetector(scintillatorSDName),
-    fMuonHitsCollection(nullptr),
-    fAnalysisManager(nullptr) {
-    fAnalysisManager = G4AnalysisManager::Instance();
+    fMuonHitsCollection(nullptr) {
     collectionName.push_back("muon_hits_collection");
 }
 
@@ -52,31 +50,19 @@ void MuTQMuGridSD::EndOfEvent(G4HCofThisEvent*) {
         );
         return;
     }
-    FillHistrogram();
-}
-
-void MuTQMuGridSD::FillHistrogram() const {
     if (fMuonHitsCollection->entries() == 0) { return; }
 
     auto hit = static_cast<MuTQMuGridHit*>(fMuonHitsCollection->GetHit(0));
+    auto energy = hit->GetKineticEnergy();
+    auto phi = M_PI + hit->GetMomentum().phi();
+    auto theta = M_PI - hit->GetMomentum().theta();
 
-    fAnalysisManager->FillH1(3, hit->GetKineticEnergy());
-    fAnalysisManager->FillH1(4, M_PI - hit->GetMomentum().theta());
-    fAnalysisManager->FillH1(5, hit->GetMomentum().phi());
-    fAnalysisManager->FillH1(6, fMuonHitsCollection->entries());
-    if (fMuonHitsCollection->entries() == 1) {
-        fAnalysisManager->FillH1(7, hit->GetScintillatorID());
-        fAnalysisManager->FillH1(11, hit->GetKineticEnergy());
-        fAnalysisManager->FillH1(12, M_PI - hit->GetMomentum().theta());
-        fAnalysisManager->FillH1(13, hit->GetMomentum().phi());
-        return;
+    MuTQAnalysisManager::Instance().Fill(1, energy, phi, theta);
+    if (fMuonHitsCollection->entries() > 1) {
+        MuTQAnalysisManager::Instance().Fill(2, energy, phi, theta);
+        MuTQAnalysisManager::Instance().Fill(fMuonHitsCollection->entries() + 2, energy, phi, theta);
+    } else {
+        MuTQAnalysisManager::Instance().Fill(3, energy, phi, theta);
     }
-    fAnalysisManager->FillH1(8, hit->GetKineticEnergy());
-    fAnalysisManager->FillH1(9, M_PI - hit->GetMomentum().theta());
-    fAnalysisManager->FillH1(10, hit->GetMomentum().phi());
-    G4int histID = 3 * fMuonHitsCollection->entries() + 8;
-    fAnalysisManager->FillH1(histID, hit->GetKineticEnergy());++histID;
-    fAnalysisManager->FillH1(histID, M_PI - hit->GetMomentum().theta());++histID;
-    fAnalysisManager->FillH1(histID, hit->GetMomentum().phi());
 }
 
