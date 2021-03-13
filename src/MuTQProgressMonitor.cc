@@ -19,21 +19,11 @@ void MuTQProgressMonitor::RunStart(G4int nEvent) {
     }
 }
 
-#ifdef G4MULTITHREADED
-std::mutex mutexMuTQProgressMonitor;
-#endif
-
 void MuTQProgressMonitor::EventComplete() {
     if (!fTimerStarted) { return; }
 
-#ifdef G4MULTITHREADED
-    mutexMuTQProgressMonitor.lock();
-#endif
     ++fProcessedEvents;
     G4int lProcessedEvents = fProcessedEvents;
-#ifdef G4MULTITHREADED
-    mutexMuTQProgressMonitor.unlock();
-#endif
 
     time_t currentTime = time(nullptr);
     G4float avgTimeForOneEvent = ((G4float)(currentTime - fRunStartTime)) / lProcessedEvents;

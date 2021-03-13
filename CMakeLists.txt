@@ -33,6 +33,9 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #
 add_executable(MuGridAtTianQin MuGridAtTianQin.cc ${sources} ${headers})
 target_link_libraries(MuGridAtTianQin ${Geant4_LIBRARIES})
+add_executable(MuTQStartParallelRun MuTQStartParallelRun.cc)
+add_executable(MuTQMergeParallelRun MuTQMergeParallelRun.cc ${sources} ${headers})
+target_link_libraries(MuTQMergeParallelRun ${Geant4_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we

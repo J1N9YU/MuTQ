@@ -8,6 +8,9 @@
 #include "MuTQProgressMonitor.hh"
 
 class MuTQRunAction : public G4UserRunAction {
+private:
+    MuTQAnalysisManager* fAnalysisManager;
+    
 public:
     MuTQRunAction();
     virtual ~MuTQRunAction();

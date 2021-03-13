@@ -1,11 +1,7 @@
 #include "MuTQAnalysisManager.hh"
 #include "G4SystemOfUnits.hh"
 
-MuTQAnalysisManager::MuTQAnalysisManager() :
-    fRootFileName("output") {}
-
-constexpr G4double ceilingHeight = 10 * m;
-constexpr G4double halfSpanAngle = 45 * deg;
+const char* MuTQAnalysisManager::fRootFileName = "untitled";
 
 void MuTQAnalysisManager::Initialize() const {
     auto g4AnalysisManager = G4Analysis::ManagerInstance("root");
@@ -70,42 +66,29 @@ void MuTQAnalysisManager::Initialize() const {
 
     // Histrograms.
 
-#define MuTQ_H2_CEILING_SIZE 100, -ceilingHeight * tan(halfSpanAngle), ceilingHeight * tan(halfSpanAngle)
-#define MuTQ_H2_CEILING_INTERSECTION "IntersectionPoint", MuTQ_H2_CEILING_SIZE, MuTQ_H2_CEILING_SIZE, "m", "m"
-    g4AnalysisManager->CreateH2("CeilIntersectionOfGenerated", MuTQ_H2_CEILING_INTERSECTION); // 0
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit", MuTQ_H2_CEILING_INTERSECTION); // 1
-    g4AnalysisManager->CreateH2("CeilIntersectionOfReconstructable", MuTQ_H2_CEILING_INTERSECTION); // 2
-    g4AnalysisManager->CreateH2("CeilIntersectionOfUnreconstructable", MuTQ_H2_CEILING_INTERSECTION); // 3
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit2", MuTQ_H2_CEILING_INTERSECTION); // 4
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit3", MuTQ_H2_CEILING_INTERSECTION); // 5
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit4", MuTQ_H2_CEILING_INTERSECTION); // 6
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit5", MuTQ_H2_CEILING_INTERSECTION); // 7
-    g4AnalysisManager->CreateH2("CeilIntersectionOfHit6", MuTQ_H2_CEILING_INTERSECTION); // 8
-
-#define MuTQ_H2_DIRECTION "Direction", 90, 0*deg, 360*deg, 90, 0*deg, 90*deg, "deg", "deg"
-    g4AnalysisManager->CreateH2("DirectionOfGenerated", MuTQ_H2_DIRECTION); // 9
-    g4AnalysisManager->CreateH2("DirectionOfHit", MuTQ_H2_DIRECTION); // 10
-    g4AnalysisManager->CreateH2("DirectionOfReconstructable", MuTQ_H2_DIRECTION); // 11
-    g4AnalysisManager->CreateH2("DirectionOfUnreconstructable", MuTQ_H2_DIRECTION); // 12
-    g4AnalysisManager->CreateH2("DirectionOfHit2", MuTQ_H2_DIRECTION); // 13
-    g4AnalysisManager->CreateH2("DirectionOfHit3", MuTQ_H2_DIRECTION); // 14
-    g4AnalysisManager->CreateH2("DirectionOfHit4", MuTQ_H2_DIRECTION); // 15
-    g4AnalysisManager->CreateH2("DirectionOfHit5", MuTQ_H2_DIRECTION); // 16
-    g4AnalysisManager->CreateH2("DirectionOfHit6", MuTQ_H2_DIRECTION); // 17
+#define MuTQ_H2_DIRECTION "Direction", 720, 0*deg, 360*deg, 180, 0*deg, 90*deg, "deg", "deg"
+    g4AnalysisManager->CreateH2("DirectionOfGenerated", MuTQ_H2_DIRECTION); // 0
+    g4AnalysisManager->CreateH2("DirectionOfHit", MuTQ_H2_DIRECTION); // 1
+    g4AnalysisManager->CreateH2("DirectionOfReconstructable", MuTQ_H2_DIRECTION); // 2
+    g4AnalysisManager->CreateH2("DirectionOfUnreconstructable", MuTQ_H2_DIRECTION); // 3
+    g4AnalysisManager->CreateH2("DirectionOfHit2", MuTQ_H2_DIRECTION); // 4
+    g4AnalysisManager->CreateH2("DirectionOfHit3", MuTQ_H2_DIRECTION); // 5
+    g4AnalysisManager->CreateH2("DirectionOfHit4", MuTQ_H2_DIRECTION); // 6
+    g4AnalysisManager->CreateH2("DirectionOfHit5", MuTQ_H2_DIRECTION); // 7
+    g4AnalysisManager->CreateH2("DirectionOfHit6", MuTQ_H2_DIRECTION); // 8
 }
 
 void MuTQAnalysisManager::Open() const {
     G4AnalysisManager::Instance()->OpenFile(fRootFileName);
 }
 
-void MuTQAnalysisManager::Fill(G4int&& id, const G4double& energy, const G4double& phi, const G4double& theta) const {
-    G4AnalysisManager::Instance()->FillNtupleFColumn(id, 0, 1.0 / CLHEP::GeV * energy);
-    G4AnalysisManager::Instance()->FillNtupleFColumn(id, 1, 1.0 / CLHEP::rad * phi);
-    G4AnalysisManager::Instance()->FillNtupleFColumn(id, 2, 1.0 / CLHEP::rad * theta);
-    G4AnalysisManager::Instance()->AddNtupleRow(id);
-    G4double rho = ceilingHeight * tan(theta);
-    G4AnalysisManager::Instance()->FillH2(id, rho * cos(phi), rho * sin(phi));
-    G4AnalysisManager::Instance()->FillH2(id + 9, phi, theta);
+void MuTQAnalysisManager::Fill(G4int id, const G4double& energy, const G4double& phi, const G4double& theta) const {
+    auto g4AnalysisManager = G4AnalysisManager::Instance();
+    g4AnalysisManager->FillNtupleFColumn(id, 0, 1.0 / GeV * energy);
+    g4AnalysisManager->FillNtupleFColumn(id, 1, 1.0 / rad * phi);
+    g4AnalysisManager->FillNtupleFColumn(id, 2, 1.0 / rad * theta);
+    g4AnalysisManager->AddNtupleRow(id);
+    g4AnalysisManager->FillH2(id, phi, theta);
 }
 
 void MuTQAnalysisManager::WriteAndClose() const {

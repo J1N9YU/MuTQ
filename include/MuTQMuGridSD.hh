@@ -10,6 +10,7 @@
 class MuTQMuGridSD : public G4VSensitiveDetector {
 private:
     MuTQMuGridHitsCollection* fMuonHitsCollection;
+    MuTQAnalysisManager* fAnalysisManager;
 
 public:
     MuTQMuGridSD(const G4String& scintillatorSDName);

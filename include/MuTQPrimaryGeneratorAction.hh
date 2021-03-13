@@ -17,6 +17,8 @@ private:
     G4ParticleGun* fMuonPlusGun;
     G4ParticleGun* fMuonMinusGun;
 
+    MuTQAnalysisManager* fAnalysisManager;
+
 public:
     MuTQPrimaryGeneratorAction();
     virtual ~MuTQPrimaryGeneratorAction();

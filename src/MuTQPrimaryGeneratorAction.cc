@@ -10,11 +10,13 @@
 MuTQPrimaryGeneratorAction::MuTQPrimaryGeneratorAction() :
     G4VUserPrimaryGeneratorAction(),
     fMuonPlusGun(new G4ParticleGun(G4MuonPlus::Definition())),
-    fMuonMinusGun(new G4ParticleGun(G4MuonMinus::Definition())) {}
+    fMuonMinusGun(new G4ParticleGun(G4MuonMinus::Definition())),
+    fAnalysisManager(new MuTQAnalysisManager()) {}
 
 MuTQPrimaryGeneratorAction::~MuTQPrimaryGeneratorAction() {
     delete fMuonPlusGun;
     delete fMuonMinusGun;
+    delete fAnalysisManager;
 }
 
 void MuTQPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
@@ -50,7 +52,7 @@ void MuTQPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
     gun->SetParticleMomentumDirection(-targetZ);
     gun->GeneratePrimaryVertex(event);
 
-    MuTQAnalysisManager::Instance().Fill(0, energy, phi, theta);
+    fAnalysisManager->Fill(0, energy, phi, theta);
 }
 
 void MuTQPrimaryGeneratorAction::FindEnergyAndTheta(G4double& energy, G4double& theta) const {

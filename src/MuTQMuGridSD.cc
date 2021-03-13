@@ -8,11 +8,14 @@
 
 MuTQMuGridSD::MuTQMuGridSD(const G4String& scintillatorSDName) :
     G4VSensitiveDetector(scintillatorSDName),
-    fMuonHitsCollection(nullptr) {
+    fMuonHitsCollection(nullptr),
+    fAnalysisManager(new MuTQAnalysisManager()) {
     collectionName.push_back("muon_hits_collection");
 }
 
-MuTQMuGridSD::~MuTQMuGridSD() {}
+MuTQMuGridSD::~MuTQMuGridSD() {
+    delete fAnalysisManager;
+}
 
 void MuTQMuGridSD::Initialize(G4HCofThisEvent* hitCollectionOfThisEvent) {
     fMuonHitsCollection = new MuTQMuGridHitsCollection(SensitiveDetectorName, collectionName[0]);
@@ -57,12 +60,12 @@ void MuTQMuGridSD::EndOfEvent(G4HCofThisEvent*) {
     auto phi = M_PI + hit->GetMomentum().phi();
     auto theta = M_PI - hit->GetMomentum().theta();
 
-    MuTQAnalysisManager::Instance().Fill(1, energy, phi, theta);
+    fAnalysisManager->Fill(1, energy, phi, theta);
     if (fMuonHitsCollection->entries() > 1) {
-        MuTQAnalysisManager::Instance().Fill(2, energy, phi, theta);
-        MuTQAnalysisManager::Instance().Fill(fMuonHitsCollection->entries() + 2, energy, phi, theta);
+        fAnalysisManager->Fill(2, energy, phi, theta);
+        fAnalysisManager->Fill(fMuonHitsCollection->entries() + 2, energy, phi, theta);
     } else {
-        MuTQAnalysisManager::Instance().Fill(3, energy, phi, theta);
+        fAnalysisManager->Fill(3, energy, phi, theta);
     }
 }
 
